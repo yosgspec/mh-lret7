@@ -1,0 +1,36 @@
+﻿<div id=players class=flex-center-col>
+	<b>プレイヤー名</b>
+	@foreach(var (name,i) in names.Select((a,b)=>(a,b))){<input
+		type=text
+		placeholder=@($"[ハンター{i+1}]")
+		@bind=@names[i]
+	>}
+</div>
+
+<style>
+#players input{
+	width: 12em;
+	margin: 2px 0 0 0;
+}
+</style>
+
+@inject IJSRuntime js;
+@inject AppState AppState;
+@implements IDisposable;
+
+@code{
+	protected override void OnInitialized(){AppState.OnChange+=StateHasChanged;}
+	public void Dispose(){AppState.OnChange-=StateHasChanged;}
+
+	private string[] names=Enumerable.Range(0,4).Select(i=>"ハンター"+(i+1)).ToArray();
+
+	protected override async Task OnInitializedAsync(){
+		try{
+			names=await Memory.load<string[]>(js,"playerNames");
+		}
+		catch{}
+		setItems();
+	}
+
+	private void setItems(){AppState.setPlayerNames(names);}
+}

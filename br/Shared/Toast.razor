@@ -1,0 +1,37 @@
+<div id=toast class=@(isShow? "toastShow": "toastHide")>
+	@msg
+</div>
+
+<style>
+#toast{
+	position: fixed;
+	z-index: 100;
+	left: 50%;
+	transform: translateX(-50%); 
+
+	font-weight: bold;
+	font-size: 1.4em;
+	transition: all 500ms;
+	background-color: #992200;
+	color: #FF6644;
+	border-radius: 5px;
+	padding: 5px;
+	top: 5px;
+}
+#toast.toastShow{opacity: 0.8;}
+#toast.toastHide{opacity: 0.0;}
+</style>
+
+@code{
+	private bool isShow=false;
+	private string msg="";
+
+	public async Task show(string msg){
+		this.msg=msg;
+		isShow=true;
+		StateHasChanged();
+		await Task.Delay(2500);
+		isShow=false;
+		StateHasChanged();
+	}
+}

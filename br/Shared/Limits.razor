@@ -1,0 +1,93 @@
+﻿<div id=limits class=flex-center-col>
+	<Toast @ref="toast" />
+	<span><b>縛リスト</b>(改行で区切り)</span>
+	<textarea @bind=@data @onblur="setItems"></textarea>
+	<div class=flex-center style=align-items:stretch>
+		<button @onclick="loadDefault">デフォルト</button>
+		<span style="margin:0 0 0 50px;align-self:center;">リスト</span>
+		<input class=datalist @bind=@dataKey list=data-key style=width:6em>
+		<datalist id=data-key>
+			@foreach(var (key,val) in datas){<option>
+				@key
+			</option>}
+		</datalist>
+		<button style="margin:0 0 0 2px;" @onclick="load">読込</button>
+		<button style="margin:0 0 0 2px;" @onclick="save">保存</button>
+	</div>
+</div>
+
+<style>
+#limits{
+	width: 100%;
+}
+#limits textarea{
+	margin: 5px 0;
+	width: 100%;
+	height: 12em;
+}
+#limits button{
+	margin: 2px;
+}
+</style>
+
+@using System.Text.Json;
+@inject HttpClient Http;
+@inject IJSRuntime js;
+@inject AppState AppState;
+@implements IDisposable;
+
+@code{
+	protected override void OnInitialized(){AppState.OnChange+=StateHasChanged;}
+	public void Dispose(){AppState.OnChange-=StateHasChanged;}
+
+	private Toast toast;
+	private string dataDefault;
+	private string data="";
+	private string dataKey="";
+	private Dictionary<string,string> datas=new Dictionary<string,string>{};
+
+	protected override async Task OnInitializedAsync(){
+		dataDefault=string.Join("\n",await Http.GetJsonAsync<string[]>("Assets/data/limitDefault.json"));
+		try{
+			data=string.Join("\n",await Memory.load<string[]>(js,"limitCurrent"));
+		}
+		catch{
+			data=dataDefault;
+		}
+		try{
+			datas=await Memory.load<Dictionary<string,string>>(js,"limitStorage");
+		}
+		catch{}
+		setItems();
+	}
+
+	private async Task save(){
+		if(dataKey=="") dataKey="default";
+		datas[dataKey]=data;
+		_=Memory.save(js,"limitStorage",datas);
+		setItems();
+		await toast.show($"縛リスト「{dataKey}」を保存しました!");
+	}
+
+	private async Task load(){
+		if(datas.ContainsKey(dataKey)){
+			data=datas[dataKey];
+			setItems();
+			await toast.show($"縛リスト「{dataKey}」を読み込みました!");
+		}
+		else{
+			await toast.show($"縛リスト「{dataKey}」が見つかりません...");
+		}
+	}
+
+	private async Task loadDefault(){
+		data=dataDefault;
+		setItems();
+		await toast.show("縛リストを初期化しました。");
+	}
+
+	private void setItems(){
+		AppState.setLimitCurrent(Array.FindAll(data.Split("\n"),v=>v!=""));
+		AppState.setLimitStorage(datas);
+	}
+}

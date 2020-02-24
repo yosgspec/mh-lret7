@@ -1,0 +1,81 @@
+﻿<div id=options class=flex-center-col>
+	<b>設定</b>
+	<div class=flex-center>@foreach(var (key,item) in items){
+		@("")<input type=checkbox
+			id=@key
+			@bind=@item.isChecked
+			disabled=@item.isDisabled
+			@onclick=@(()=>switchItem(key))
+		><label
+			@key="key"
+			for=@key
+		>@key</label>
+	}</div>
+</div>
+
+@inject IJSRuntime js;
+@inject AppState AppState;
+@implements IDisposable;
+
+@code{
+	protected override void OnInitialized(){AppState.OnChange+=StateHasChanged;}
+
+	private Dictionary<string,Item> lretItems{get{return AppState.lretItems;}}
+
+	private Dictionary<string,Item> items=new Dictionary<string,Item>{
+		{"武器重複させない",     new Item{isChecked=false, isDisabled=false}},
+		{"武器を統一",           new Item{isChecked=false, isDisabled=false}},
+		{"縛り重複させない",     new Item{isChecked=false, isDisabled=true}},
+		{"縛りを統一",           new Item{isChecked=false, isDisabled=true}},
+		{"クリップボードに出力", new Item{isChecked=false, isDisabled=false}},
+		{"twitterに投稿",        new Item{isChecked=false, isDisabled=false}}
+	};
+
+	private bool watchClose=false;
+	private async Task watchRun(){
+		string[] keys={"武器","縛り"};
+		var log=new Dictionary<string,bool>{};
+		for(;;){
+			await Task.Delay(100);
+			foreach(var key in keys){
+				if(!log.ContainsKey(key) || log[key]!=AppState.lretItems[key].isChecked){
+					log[key]=AppState.lretItems[key].isChecked;
+					items[$"{key}重複させない"].isDisabled=!log[key];
+					items[$"{key}を統一"].isDisabled=!log[key];
+				}
+			}
+			if(watchClose) return;
+			StateHasChanged();
+		}
+	}
+
+	protected override async Task OnInitializedAsync(){
+		await Task.Delay(1);
+		try{
+			items=await Memory.load<Dictionary<string,Item>>(js,"options");
+		}
+		catch{}
+		setItems();
+		_=watchRun();
+	}
+
+	public void Dispose(){
+		watchClose=true;
+		AppState.OnChange-=StateHasChanged;
+	}
+
+	private async void switchItem(string key){
+		await Task.Delay(1);
+		if(items[key].isChecked){
+			if(key=="武器重複させない") items["武器を統一"].isChecked=false;
+			else if(key=="武器を統一") items["武器重複させない"].isChecked=false;
+			else if(key=="縛り重複させない") items["縛りを統一"].isChecked=false;
+			else if(key=="縛りを統一") items["縛り重複させない"].isChecked=false;
+			StateHasChanged();
+		}
+		setItems();
+	}
+
+	private void setItems(){AppState.setOptions(items);}
+
+}

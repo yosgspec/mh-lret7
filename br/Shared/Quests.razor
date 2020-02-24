@@ -1,0 +1,56 @@
+﻿<div id=quests class=flex-center-col>
+	<b>クエスト</b>
+	<div class=flex-center>@foreach(var (key,item) in items){
+		@("")<input type=checkbox
+			id=@key
+			@bind=@item.isChecked
+			disabled=@item.isDisabled
+			@onclick=@(()=>switchItem(key))
+		><label
+			@key="key"
+			for=@key
+		>@key</label>
+	}</div>
+</div>
+
+@inject IJSRuntime js;
+@inject AppState AppState;
+@implements IDisposable;
+
+@code{
+	protected override void OnInitialized(){AppState.OnChange+=StateHasChanged;}
+	public void Dispose(){AppState.OnChange-=StateHasChanged;}
+
+	private Dictionary<string,Item> items=new Dictionary<string,Item>{
+		{"M★1",     new Item{isChecked=true,  isDisabled=false}},
+		{"M★2",     new Item{isChecked=true,  isDisabled=false}},
+		{"M★3",     new Item{isChecked=true,  isDisabled=false}},
+		{"M★4",     new Item{isChecked=true,  isDisabled=false}},
+		{"M★5",     new Item{isChecked=true,  isDisabled=false}},
+		{"M★6",     new Item{isChecked=true,  isDisabled=false}},
+		{"MR24-",    new Item{isChecked=true,  isDisabled=false}},
+		{"MR50-",    new Item{isChecked=true,  isDisabled=false}},
+		{"MR70-",    new Item{isChecked=true,  isDisabled=false}},
+		{"MR100-",   new Item{isChecked=true,  isDisabled=false}},
+		{"イベント", new Item{isChecked=false, isDisabled=false}},
+		{"歴戦",     new Item{isChecked=true,  isDisabled=false}},
+		{"多頭",     new Item{isChecked=true,  isDisabled=false}},
+		{"特殊",     new Item{isChecked=false, isDisabled=false}}
+	};
+
+	protected override async Task OnInitializedAsync(){
+		await Task.Delay(1);
+		try{
+			items=await Memory.load<Dictionary<string,Item>>(js,"quests");
+		}
+		catch{}
+		setItems();
+	}
+
+	private async void switchItem(string key){
+		await Task.Delay(1);
+		setItems();
+	}
+
+	private void setItems(){AppState.setQuests(items);}
+}

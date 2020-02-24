@@ -1,0 +1,246 @@
+﻿@page "/"
+
+<div class=home>
+	<div class=page-title>MHWIルーレットBR</div>
+	<hr>
+	<div id=huntLret class=flex-center-col>
+		<Toast @ref="toast" />
+		<div class=flex-center-col style="max-width:675px;width:100%;">
+			<div style=max-width:500px>
+				<p class=spacer><Players /></p>
+				<p class=spacer><LretItems /></p>
+				<p class=spacer><Options /></p>
+				<p style="transition: all 500ms;" class=@(
+					lretItems.ContainsKey("(edit)") && lretItems["(edit)"].isChecked?
+						"limitDisp":
+						"limitHide"
+				)>
+					<Limits />
+				</p>
+				<p class=spacer><Quests /></p>
+			</div>
+			<p class="spacer flex-center"><button @onclick="lretRun">Let's ルーレット!</button></p>
+			<p class="spacer flex-center">
+				<textarea @bind="result" id="result" class=huntLret></textarea>
+				<button @onclick="memoryClear">💣</button>
+			</p>
+		</div>
+	</div>
+</div>
+
+<style>
+.limitDisp{
+	max-height: 300px;
+	opacity: 1;
+	visibility: visible;
+	margin: 0 0 20px 0;
+}
+.limitHide{
+	max-height: 0;
+	opacity: 0;
+	visibility: hidden;
+	margin: 0;
+}
+textarea#result{
+	width: 100%;
+	height: 12em;
+}
+.spacer{
+	width: 100%;
+	margin: 0 0 20px 0;
+}
+</style>
+
+@using System.Text.Json;
+@using Utils;
+@using XorShifts;
+@using LretUtils;
+@inject IJSRuntime js;
+@inject HttpClient Http;
+@inject AppState AppState;
+@implements IDisposable;
+
+@code{
+	protected override void OnInitialized(){AppState.OnChange+=StateHasChanged;}
+	public void Dispose(){AppState.OnChange-=StateHasChanged;}
+
+	//バージョン情報
+	private readonly double appVersion=200219;
+
+	private Toast toast;
+	private XorShift xs=new XorShift();
+
+	//状態プロパティ
+	private string[] playerNames{get{return AppState.playerNames;}}
+	private Dictionary<string,Item> lretItems{get{return AppState.lretItems;}}
+	private Dictionary<string,Item> options{get{return AppState.options;}}
+	private string[] limitCurrent{get{return AppState.limitCurrent;}}
+	private Dictionary<string,Item> quests{get{return AppState.quests;}}
+
+	//履歴
+	private string[] weaponLasts;
+	private string[] limitLasts;
+	private List<string> questLasts=new List<string>{};
+
+	//Jsonデータ
+	private string[] weapons;
+	private Dictionary<string,Dictionary<string,Dictionary<string,string[]>>> questData;
+	private string result="ここに結果が表示されます。";
+
+	//読込時処理
+	protected override async Task OnInitializedAsync(){
+		await Task.Delay(1);
+		weaponLasts=Enumerable.Repeat<string>("",playerNames.Length).ToArray();
+		limitLasts=Enumerable.Repeat<string>("",playerNames.Length).ToArray();
+
+		weapons=await Http.GetJsonAsync<string[]>("Assets/data/weapons.json?0");
+		questData=await Http.GetJsonAsync<Dictionary<string,Dictionary<string,Dictionary<string,string[]>>>>("Assets/data/questData.json?0");
+
+		//更新履歴
+		var defaultLog=await Http.GetJsonAsync<string[]>("Assets/data/defaultLog.json?0");
+		//日付情報をストア
+		AppState.setLastUpdate(DateTime.Parse(defaultLog[3].Substring(0,defaultLog[3].Length-1)));
+		result=string.Join("\n",defaultLog);
+
+		//バージョンが更新されていたら簡単な設定項目を削除する。
+		var isReset=false;
+		try{
+			var ver=await Memory.load<double>(js,"$Version");
+			if(ver<appVersion) isReset=true;
+		}
+		catch{
+			isReset=true;
+		}
+		if(isReset){
+			await Memory.remove(js,"lretItems");
+			await Memory.remove(js,"options");
+			await Memory.remove(js,"quests");
+			await Memory.save(js,"$Version",this.appVersion);
+			await toast.show("アプリ更新のため一部設定をリセットしました。");
+		}
+	}
+
+	//ローカルストレージへ保存
+	private async Task saveAll(){
+		await Memory.save(js,"playerNames",playerNames);
+		await Memory.save(js,"lretItems",lretItems);
+		await Memory.save(js,"options",options);
+		await Memory.save(js,"limitCurrent",limitCurrent);
+		await Memory.save(js,"quests",quests);
+		
+	}
+
+	//Let's ルーレット!
+	private async Task lretRun(){
+		//プレイヤーリスト
+		var playerNames=this.playerNames.Where(s=>s!="").ToList();
+		List<int> strLen=playerNames.ConvertAll(s=>Util.lenB(s));
+		int maxLen=strLen.Max();
+		for(int i=0;i<playerNames.Count;i++){
+			playerNames[i]=Util.padStr(playerNames[i],strLen[i],maxLen);
+		}
+		List<Player> players=playerNames.ConvertAll(
+			v=>new Player(v,new Dictionary<string,string[]>{
+				{"武器",weapons},
+				{"縛り",limitCurrent}
+			})
+		);
+
+		result="";
+		var resultTwit="";
+
+		//プレイヤー項目が選択される場合
+		if(lretItems["武器"].isChecked || lretItems["縛り"].isChecked){
+			//武器ルーレット
+			if(lretItems["武器"].isChecked){
+				Lret.item(
+					players,
+					weaponLasts,
+					weapons,
+					"武器",
+					options["武器を統一"].isChecked,
+					options["武器重複させない"].isChecked,
+					xs);
+			}
+
+			//縛りルーレット
+			if(lretItems["縛り"].isChecked && 0<limitCurrent.Length){
+				Lret.item(
+					players,
+					limitLasts,
+					limitCurrent,
+					"縛り",
+					options["縛りを統一"].isChecked,
+					options["縛り重複させない"].isChecked,
+					xs);
+			}
+
+			//結果集計
+			foreach(var p in players){
+				result+=p.result+"\n";
+				resultTwit+=p.resultTwit+"\n";
+			}
+		}
+
+		//クエストルーレット
+		if(lretItems["クエスト"].isChecked){
+			//クエストリストの構築
+			var questList=new List<string>{};
+			var data=questData;
+			Action<string,string[]> push=(key,ext)=>
+				questList.AddRange(ext.Select(s=>$"【{key}】{s}"));
+
+			foreach(var (key,obj) in quests){
+				if(new[]{"歴戦","多頭"}.Contains(key)) continue;
+				if(obj.isChecked){
+					var isExp=quests["歴戦"].isChecked;
+					var isMeny=quests["多頭"].isChecked;
+
+					if(data["通常"]["単体"].ContainsKey(key))
+						push(key,data["通常"]["単体"][key]);
+					if(isMeny && data["通常"]["多頭"].ContainsKey(key))
+						push(key,data["通常"]["多頭"][key]);
+					if(isExp && data["歴戦"]["単体"].ContainsKey(key)){
+						push(key,Array.ConvertAll(data["歴戦"]["単体"][key],s=>$"[歴戦]{s}"));
+						if(isMeny && data["歴戦"]["多頭"].ContainsKey(key))
+							push(key,Array.ConvertAll(data["歴戦"]["多頭"][key],s=>$"[歴戦]{s}"));
+					}
+				}
+			}
+			//クエストリストが空でなければルーレット実行
+			if(0<questList.Count){
+				if(result!="") result+="\n";
+				var quest=Lret.quest(questLasts,questList,xs);
+				result+=$"ターゲット:{quest}\n";
+				resultTwit+=$"対象:{quest}";
+			}
+		}
+
+		//入力された設定を保存
+		await saveAll();
+
+		if(options["クリップボードに出力"].isChecked){
+			try{
+				await Util.setClipBoard(js,result,"result");
+				await toast.show("クリップボードに結果を出力しました!");
+			}
+			catch{
+				await toast.show("クリップボードへの書込に失敗しました...");
+			}
+		}
+
+		if(options["twitterに投稿"].isChecked){
+			//内部のwindow.openで確実にエラー発生。catch不可。
+			await Util.tweet(js,resultTwit);
+		}
+	}
+
+	//アプリの更新で変化しうる項目の設定を削除
+	private async Task memoryClear(){
+		await Memory.remove(js,"lretItems");
+		await Memory.remove(js,"options");
+		await Memory.remove(js,"quests");
+		await Memory.save(js,"$Version",this.appVersion);
+		await toast.show("一部設定を爆破しました。リロードしてください。");
+	}
+}

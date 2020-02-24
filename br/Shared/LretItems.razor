@@ -1,0 +1,47 @@
+﻿<div id=lretItems class=flex-center-col>
+	<b>ルーレット項目</b>
+	<div class=flex-center>@foreach(var (key,item) in items){
+		@("")<input type=checkbox
+			id=@key
+			@bind=@item.isChecked
+			disabled=@item.isDisabled
+			@onclick=@(()=>switchItem(key))
+		><label
+			@key="key"
+			for=@key
+		>@key</label>
+	}</div>
+</div>
+
+@inject IJSRuntime js;
+@inject AppState AppState;
+@implements IDisposable;
+
+@code{
+	protected override void OnInitialized(){AppState.OnChange+=StateHasChanged;}
+	public void Dispose(){AppState.OnChange-=StateHasChanged;}
+
+	private Dictionary<string,Item> items=new Dictionary<string,Item>{
+		{"武器",     new Item{isChecked=true,  isDisabled=false}},
+		{"クエスト", new Item{isChecked=true,  isDisabled=false}},
+		{"縛り",     new Item{isChecked=false, isDisabled=false}},
+		{"(edit)",   new Item{isChecked=false, isDisabled=false}}
+	};
+
+	protected override async Task OnInitializedAsync(){
+		await Task.Delay(1);
+		try{
+			items=await Memory.load<Dictionary<string,Item>>(js,"lretItems");
+		}
+		catch{}
+		setItems();
+	}
+
+	private async void switchItem(string key){
+		await Task.Delay(1);
+		setItems();
+	}
+
+	private void setItems(){AppState.setLretItems(items);}
+
+}

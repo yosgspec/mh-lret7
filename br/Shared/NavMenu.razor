@@ -1,0 +1,150 @@
+﻿<div>
+	<div id=nav-button @onclick="navChange"><span>@navMark</span></div>
+	<div id=navMenu	class=@(isDisp? "navDisp": "navHide")>
+		<div>
+			<a href="http://www.eucaly.net/counter.html" target="_blank"><img src="http://app.eucaly.net/counter/gspectool/1/5/208" border="0" ></a>
+			<span style="margin:0 0 0 0.5em;">
+				Last update:@lastUpdate
+			</span>
+		</div>
+		<div>
+			<NavLink href="./readme/" title="ルーレットについて" Match="NavLinkMatch.All" @onclick="scrollTop">ルーレットについて</NavLink>
+			<span>ルーレット:</span>
+			<a href="http://gspectool.ifdef.jp/lret/mhp2g.html" title="MHP2Gルーレット">MHP2G</a>
+			<a href="http://gspectool.ifdef.jp/lret/mhp3.html" title="MHP3ルーレット">MHP3</a>
+			<a href="http://gspectool.ifdef.jp/lret/mh3g.html" title="MH3Gルーレット">MH3G</a>
+			<a href="http://gspectool.ifdef.jp/lret/mh4.html" title="MH4ルーレット">MH4</a>
+			<a href="http://gspectool.ifdef.jp/lret/mh4g.html" title="MH4Gルーレット">MH4G</a>
+			<a href="http://gspectool.ifdef.jp/lret/mhx.html" title="MHXルーレット">MHX</a>
+			<a href="http://gspectool.ifdef.jp/lret/mhxx.html" title="MHXXルーレット">MHXX</a>
+			<NavLink href="./" title="MHWIルーレットBR" Match="NavLinkMatch.All" @onclick="scrollTop">MHWI</NavLink>@(""
+			)<a href="/lret/mhwi-ve/" title="MHWIルーレットVE">(VE)</a>
+			<a href="http://gspectool.ifdef.jp/lret/eb.html" title="GEBルーレット">GEB</a>
+			<a href="http://gspectool.ifdef.jp/lret/ge2.html" title="GE2ルーレット">GE2</a>
+			<a href="http://gspectool.ifdef.jp/lret/touki.html" title="討鬼伝ルーレット">討鬼伝</a>
+			<a href="http://gspectool.ifdef.jp/lret/toukiwami.html" title="討鬼伝 極ルーレット">討鬼伝極</a>
+			<a href="http://gspectool.ifdef.jp/lret/touki2.html" title="討鬼伝2ルーレット">討鬼伝2</a>
+			<a href="http://jbbs.shitaraba.net/netgame/13276/" title="ルーレット付属掲示板" target=_blank>結果共有</a>
+		</div>
+		<div class=nav-right>
+			<span>by.<a href="https://twitter.com/yosgspec">YOS G-spec</a></span>
+			<a href="https://github.com/yosgspec/mh-lret7" title="GitHub">GitHub</a>
+			<a href="http://gspectool.ifdef.jp/" title="ギガスペックツール">トップページ</a>
+		</div>
+	</div>
+</div>
+
+<style>
+div#navMenu{
+	padding: 2px;
+	background-color: #DDEEFF;
+}
+#navMenu .active{
+	pointer-events: none;
+	cursor: default;
+	color: #0000FF;
+	font-weight: bold;
+	text-decoration: underline;
+}
+@@media (min-width: 500px){
+	div#navMenu{
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		justify-content: space-between;
+	}
+	div#nav-button{
+		display: none;
+	}
+}
+
+@@media (max-width: 499px){
+	div#navMenu{
+		z-index: 200;
+		position: fixed;
+		top: 10px;
+		left: 0;
+
+		font-size: 1.2em;
+		bottom: 10px;
+		width: 80%;
+		border-radius: 0px 10px 10px 0px;
+		transition: all 500ms;
+	}
+	div#navMenu,div#navMenu div.nav-right{
+		display: flex;
+		flex-direction: column-reverse;
+		text-align: right;
+		align-content: space-around;
+	}
+	div#navMenu div{
+		display: flex;
+		flex-direction: column;
+		text-align: right;
+		padding: 0 40px 10px 0;
+	}
+	div#nav-button{
+		display: flex;
+		background-color: #6699CC;
+		color: #DDEEFF;
+		opacity: 0.8;
+
+		position: fixed;
+		z-index: 300;
+		top: 20px;
+		right: 20px;
+		justify-content: center;
+		align-items: center;
+
+		width: 50px;
+		height: 50px;
+		border-radius: 25px;
+		cursor: pointer;
+	}
+	div#nav-button span{
+		-moz-user-select: none;
+		-webkit-user-select: none;
+		-ms-user-select: none;
+		user-select: none;
+		font-size: 35px;
+	}
+	#navMenu.navDisp{
+		max-width: 500px;
+		opacity: 1;
+		visibility: visible;
+		margin: 0 0 20px 0;
+	}
+	#navMenu.navHide{
+		max-width: 0;
+		opacity: 0;
+		visibility: hidden;
+		margin: 0;
+	}
+}
+</style>
+
+@inject IJSRuntime js;
+@inject AppState AppState;
+@implements IDisposable;
+
+@code{
+	protected override void OnInitialized(){AppState.OnChange+=StateHasChanged;}
+	public void Dispose(){AppState.OnChange-=StateHasChanged;}
+
+	private bool isDisp=false;
+	private string navMark{get{return isDisp? "✘": "≡";}}
+
+	private string lastUpdate{get{
+		return AppState.lastUpdate.ToString("yyyy/M/d");
+	}}
+
+	private async Task scrollTop(){
+		isDisp=false;
+		await js.InvokeVoidAsync("window.scrollTo",new[]{0,0});
+	}
+
+	private void navChange(){
+		isDisp=!isDisp;
+		StateHasChanged();
+	}
+}
