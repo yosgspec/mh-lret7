@@ -6,7 +6,7 @@ html(そこそこモダンなブラウザ)
 
 ## フレームワーク・Webフォント
 [Vue.js/TypeScript](https://jp.vuejs.org/)  
-[Blazor Wasm](https://docs.microsoft.com/ja-jp/aspnet/core/blazor/?view=aspnetcore-3.1)  
+[Blazor WebAssembly](https://docs.microsoft.com/ja-jp/aspnet/core/blazor/?view=aspnetcore-3.1)  
 [M+フォント](https://mplus-fonts.osdn.jp/about.html)  
 
 ## 動作ページ
