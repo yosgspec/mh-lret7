@@ -4,9 +4,10 @@
 ## プラットフォーム
 html(そこそこモダンなブラウザ)  
 
-## フレームワーク
-Vue.js/TypeScript  
-Blazor Wasm  
+## フレームワーク・Webフォント
+[Vue.js/TypeScript](https://jp.vuejs.org/)  
+[Blazor Wasm](https://docs.microsoft.com/ja-jp/aspnet/core/blazor/?view=aspnetcore-3.1)  
+[M+フォント](https://mplus-fonts.osdn.jp/about.html)  
 
 ## 動作ページ
 [Vue.js版](http://yosgspec.starfree.jp/lret/mhwi-ve/)
