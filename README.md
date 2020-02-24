@@ -10,8 +10,8 @@ html(そこそこモダンなブラウザ)
 [M+フォント](https://mplus-fonts.osdn.jp/about.html)  
 
 ## 動作ページ
-[Vue.js版](http://yosgspec.starfree.jp/lret/mhwi-ve/)
-[Blazor版](http://yosgspec.starfree.jp/lret/mhwi-br/)
+[Vue.js版](http://yosgspec.starfree.jp/lret/mhwi-ve/)  
+[Blazor版](http://yosgspec.starfree.jp/lret/mhwi-br/)  
 
 ## 動作・ビルド
 ### Vue.js(./ve/)
