@@ -80,10 +80,10 @@ export default class MHLret extends Vue{
 	//バージョン情報
 	private readonly appVersion=200219;
 
-    $refs!:{
-    	toast: Toast,
-    	result: HTMLInputElement
-    }
+	$refs!:{
+		toast: Toast,
+		result: HTMLInputElement
+	}
 	private xs:XorShift=new XorShift();
 
 	//状態プロパティ
