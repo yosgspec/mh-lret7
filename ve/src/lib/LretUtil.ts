@@ -48,7 +48,7 @@ export class Player{
 
 		for(let [key,v] of Object.entries(this.items)){
 			if(0<=v.index){
-				res+=`$　${key}:${v.value}`;
+				res+=`　${key}:${v.value}`;
 			}
 		}
 		return res;
