@@ -152,8 +152,8 @@ export default class MHLret extends Vue{
 		}
 		const players:Player[]=playerNames.map(
 			v=>new Player(v,{
-				武器: this.weapons,
-				縛り: this.limitCurrent
+				"武器": this.weapons,
+				"縛り": this.limitCurrent
 			})
 		);
 
