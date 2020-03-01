@@ -3,7 +3,7 @@
 	<div class=flex-center>@foreach(var (key,item) in items){
 		@("")<input type=checkbox
 			id=@key
-			@bind=@item.isChecked
+			@bind="item.isChecked"
 			disabled=@item.isDisabled
 			@onclick=@(()=>switchItem(key))
 		><label
@@ -49,7 +49,8 @@
 		}
 	}
 
-	protected override async Task OnInitializedAsync(){
+	protected override async Task OnAfterRenderAsync(bool firstRender){
+		if(!firstRender) return;
 		await Task.Delay(1);
 		try{
 			items=await Memory.load<Dictionary<string,Item>>(js,"options");

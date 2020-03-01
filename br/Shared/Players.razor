@@ -3,7 +3,7 @@
 	@foreach(var (name,i) in names.Select((a,b)=>(a,b))){<input
 		type=text
 		placeholder=@($"[ハンター{i+1}]")
-		@bind=@names[i]
+		@bind="names[i]"
 	>}
 </div>
 
@@ -24,7 +24,8 @@
 
 	private string[] names=Enumerable.Range(0,4).Select(i=>"ハンター"+(i+1)).ToArray();
 
-	protected override async Task OnInitializedAsync(){
+	protected override async Task OnAfterRenderAsync(bool firstRender){
+		if(!firstRender) return;
 		try{
 			names=await Memory.load<string[]>(js,"playerNames");
 		}

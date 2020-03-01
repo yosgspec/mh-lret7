@@ -45,7 +45,7 @@ import Toast from "@/components/Toast.vue";
 	}
 })
 export default class Limits extends Vue{
-    $refs!:{toast: Toast}
+	$refs!:{toast: Toast}
 	private dataDefault:string=require("@/assets/data/limitDefault.json").join("\n");
 	private data="";
 	private dataKey="";

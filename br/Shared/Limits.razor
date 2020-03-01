@@ -5,7 +5,7 @@
 	<div class=flex-center style=align-items:stretch>
 		<button @onclick="loadDefault">デフォルト</button>
 		<span style="margin:0 0 0 50px;align-self:center;">リスト</span>
-		<input class=datalist @bind=@dataKey list=data-key style=width:6em>
+		<input class=datalist @bind="dataKey" list=data-key style=width:6em>
 		<datalist id=data-key>
 			@foreach(var (key,val) in datas){<option>
 				@key
@@ -46,7 +46,8 @@
 	private string dataKey="";
 	private Dictionary<string,string> datas=new Dictionary<string,string>{};
 
-	protected override async Task OnInitializedAsync(){
+	protected override async Task OnAfterRenderAsync(bool firstRender){
+		if(!firstRender) return;
 		dataDefault=string.Join("\n",await Http.GetJsonAsync<string[]>("Assets/data/limitDefault.json"));
 		try{
 			data=string.Join("\n",await Memory.load<string[]>(js,"limitCurrent"));

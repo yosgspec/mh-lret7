@@ -94,8 +94,8 @@ export default class MHLret extends Vue{
 	private get quests():{[s:string]:Item}{return store.state.quests;}
 
 	//履歴
-	private weaponLasts:string[];
-	private limitLasts:string[];
+	private weaponLasts!:string[];
+	private limitLasts!:string[];
 	private questLasts:string[]=[];
 
 	//Jsonデータ
@@ -152,8 +152,8 @@ export default class MHLret extends Vue{
 		}
 		const players:Player[]=playerNames.map(
 			v=>new Player(v,{
-				"武器": this.weapons,
-				"縛り": this.limitCurrent
+				武器: this.weapons,
+				縛り: this.limitCurrent
 			})
 		);
 

@@ -21,7 +21,7 @@
 			</div>
 			<p class="spacer flex-center"><button @onclick="lretRun">Let's ルーレット!</button></p>
 			<p class="spacer flex-center">
-				<textarea @bind="result" id="result" class=huntLret></textarea>
+				<textarea value=@result id="result" class=huntLret></textarea>
 				<button @onclick="memoryClear">💣</button>
 			</p>
 		</div>
@@ -88,7 +88,8 @@ textarea#result{
 	private string result="ここに結果が表示されます。";
 
 	//読込時処理
-	protected override async Task OnInitializedAsync(){
+	protected override async Task OnAfterRenderAsync(bool firstRender){
+		if(!firstRender) return;
 		await Task.Delay(1);
 		weaponLasts=Enumerable.Repeat<string>("",playerNames.Length).ToArray();
 		limitLasts=Enumerable.Repeat<string>("",playerNames.Length).ToArray();

@@ -1,10 +1,10 @@
 <template>
-<div id=app v-cloak>
+<main v-cloak>
 	<router-view/>
 	<div id=nav>
 		<NavMenu/>
 	</div>
-</div>
+</main>
 </template>
 
 <style>

@@ -28,7 +28,8 @@
 		{"(edit)",   new Item{isChecked=false, isDisabled=false}}
 	};
 
-	protected override async Task OnInitializedAsync(){
+	protected override async Task OnAfterRenderAsync(bool firstRender){
+		if(!firstRender) return;
 		await Task.Delay(1);
 		try{
 			items=await Memory.load<Dictionary<string,Item>>(js,"lretItems");

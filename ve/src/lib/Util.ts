@@ -38,6 +38,7 @@ export default class Util{
 		catch{
 			await new Promise(res=>setTimeout(res,1));
 			if(navigator.userAgent.match(/ipad|ipod|iphone/i)){
+				//@ts-ignore
 				window.getSelection().addRange(
 					//@ts-ignore
 					window.document.createRange().selectNode(ele));
@@ -46,6 +47,7 @@ export default class Util{
 				ele.select();
 			}
 			document.execCommand("copy");
+			//@ts-ignore
 			window.getSelection().removeAllRanges();
 		}
 	}
